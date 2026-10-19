@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>鑑定士試験 勉強管理</title>
+<meta name="theme-color" content="#101a3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="勉強ノート">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--card:#fff;--ink:#14213d;--sub:#5d6b82;--line:#d9e0ea;--acc:#2f54eb;--acc-ink:#fff;--bar:#e3e9f2;--danger:#c0392b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1626;--card:#18223a;--ink:#e8edf7;--sub:#9aa8c2;--line:#2a3652;--acc:#6f8cff;--acc-ink:#0f1626;--bar:#27324d;--danger:#ff7b6b}}
+:root[data-theme="dark"]{--bg:#0f1626;--card:#18223a;--ink:#e8edf7;--sub:#9aa8c2;--line:#2a3652;--acc:#6f8cff;--acc-ink:#0f1626;--bar:#27324d;--danger:#ff7b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;line-height:1.6}
+main{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:20px;font-weight:900;margin:4px 0 12px}
+h2{font-size:15px;font-weight:700;margin:0 0 10px}
+nav{display:flex;gap:4px;background:var(--bar);padding:4px;border-radius:12px;margin-bottom:16px}
+nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-weight:700;padding:9px 0;border-radius:9px;cursor:pointer}
+nav button.on{background:var(--card);color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.tm{font-size:56px;font-weight:900;text-align:center;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1.1;margin:8px 0 14px}
+.tm.run{color:var(--acc)}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;min-width:0;width:100%}
+button.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 16px;background:var(--acc);color:var(--acc-ink);cursor:pointer;width:100%}
+button.btn.stop{background:var(--danger);color:#fff}
+button.ghost{font:inherit;border:0;background:none;color:var(--sub);cursor:pointer;padding:4px 8px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.row>*{flex:1}.row>.fix{flex:none}
+.item{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.grow{flex:1;min-width:0}
+.sub{color:var(--sub);font-size:13px}
+.prog{height:10px;background:var(--bar);border-radius:6px;overflow:hidden;margin:6px 0 2px}
+.prog i{display:block;height:100%;border-radius:6px}
+.days{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:6px}
+.days div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:11px;color:var(--sub)}
+.days b{display:block;width:100%;background:var(--acc);border-radius:5px 5px 0 0;min-height:2px}
+.exam{display:flex;align-items:baseline;gap:12px}
+.big{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;min-width:90px;text-align:right}
+.empty{color:var(--sub);text-align:center;padding:8px 0}
+.next{background:var(--ink);color:var(--bg);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.next strong{font-size:26px}
+.stk{display:flex;height:12px;background:var(--bar);border-radius:6px;overflow:hidden;margin-top:4px}.stk i{display:block;height:100%}
+</style>
+</head>
+<body>
+<main>
+<h1>マイ勉強ノート</h1>
+<nav id="nav"></nav>
+<div id="view"></div>
+<div id="sync" style="margin-top:28px;text-align:center;font-size:11px;color:var(--sub);opacity:.5">この端末のブラウザに保存されます</div>
+</main>
+<script>
+const K='studynote.v1',COLS=[['オレンジ','#e8590c'],['青','#2f54eb'],['ピンク','#e64980'],['黄緑','#82c91e'],['水色','#15aabf'],['紫','#7048e8'],['赤','#e03131'],['黄色','#f0b400']];
+let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S)S={subjects:[],logs:[],exams:[],timer:null,sel:null};
+if(!S.seeded){if(!S.subjects.length)S.subjects=[['鑑定理論','#e8590c'],['演習','#2f54eb'],['民法','#e64980'],['経済学','#82c91e'],['会計学','#15aabf']].map(([name,color],i)=>({id:'s'+i+Date.now().toString(36),name,color,goal:5}));S.seeded=true}
+const TOT={'鑑定理論':700,'演習':100,'民法':200,'経済学':300,'会計学':200};
+function fixSubs(){(S.subjects||[]).forEach(s=>{if(s.total==null)s.total=TOT[s.name]||0})}
+fixSubs();
+let tab='rec';
+let ref=null,pt=null;
+const setSync=t=>{const e=document.getElementById('sync');if(e)e.textContent=t};
+function push(){if(!ref)return;clearTimeout(pt);pt=setTimeout(()=>{ref.set({upd:S.upd,state:S}).then(()=>setSync('同期オン（スマホ・PC共通）')).catch(()=>setSync('同期に失敗しました（この端末には保存済み）'))},600)}
+const save=()=>{S.upd=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}push()};
+function adopt(st){const sel=S.sel;S=st;S.sel=sel;fixSubs();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}render()}
+function merge(r,l){const out=JSON.parse(JSON.stringify(r)),map={};
+  (l.subjects||[]).forEach(s=>{const m=out.subjects.find(x=>x.name===s.name);if(m)map[s.id]=m.id;else{out.subjects.push(s);map[s.id]=s.id}});
+  const ids=new Set(out.logs.map(x=>x.id));
+  (l.logs||[]).forEach(x=>{if(!ids.has(x.id)&&map[x.sid])out.logs.push({...x,sid:map[x.sid]})});
+  (l.exams||[]).forEach(x=>{if(!out.exams.some(y=>y.id===x.id||(y.name===x.name&&y.date===x.date)))out.exams.push(x)});
+  if(l.timer&&!out.timer&&map[l.timer.sid])out.timer={...l.timer,sid:map[l.timer.sid]};
+  out.seeded=true;return out}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const fmt=s=>{const m=Math.round(s/60),h=Math.floor(m/60);return h?`${h}時間${m%60}分`:`${m}分`};
+const clock=s=>{s=Math.max(0,Math.floor(s));const p=n=>String(n).padStart(2,'0');return `${p(Math.floor(s/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`};
+const day0=(d=new Date())=>{d=new Date(d);d.setHours(0,0,0,0);return d};
+const weekStart=()=>{const d=day0();d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()};
+const sub=id=>S.subjects.find(s=>s.id===id);
+const sum=(f)=>S.logs.filter(f).reduce((a,l)=>a+l.sec,0);
+const opts=()=>S.subjects.map(s=>`<option value="${s.id}"${s.id===S.sel?' selected':''}>${esc(s.name)}</option>`).join('');
+
+function render(){
+  $('nav').innerHTML=[['rec','記録'],['sub','科目'],['stat','集計'],['exam','試験']].map(([k,n])=>`<button data-a="tab" data-v="${k}" class="${tab===k?'on':''}">${n}</button>`).join('');
+  $('view').innerHTML=tab==='rec'?recView():tab==='sub'?subView():tab==='stat'?statView():examView();
+}
+
+function nextExam(){
+  const t=day0().getTime();
+  const e=S.exams.filter(e=>new Date(e.date+'T00:00')>=t).sort((a,b)=>a.date<b.date?-1:1)[0];
+  return e?{e,d:Math.round((new Date(e.date+'T00:00')-t)/864e5)}:null;
+}
+
+function recView(){
+  let h='';
+  const n=nextExam();
+  if(n)h+=`<div class="next"><span>${esc(n.e.name)}まで</span><span><strong>${n.d}</strong> 日</span></div>`;
+  if(!S.subjects.length){
+    return h+`<div class="card"><div class="empty">まず「科目」タブで勉強する科目を追加しましょう。</div></div>`;
+  }
+  const run=S.timer;
+  h+=`<div class="card"><div class="tm ${run?'run':''}" id="tm">${clock(run?(Date.now()-run.start)/1000:0)}</div>
+  <select id="tsel" ${run?'disabled':''}>${opts()}</select>
+  ${run?`<div class="sub" style="margin-top:8px;text-align:center">${esc(run.mat||'')}${run.unit?'／'+esc(run.unit):''}</div><div class="row"><input id="tmemo" placeholder="メモ（例：1ページから8ページ）" autocomplete="off" value="${esc(run.memo||'')}"></div>`:pick('t')}
+  <div class="row"><button class="btn ${run?'stop':''}" data-a="${run?'stop':'start'}">${run?'終了して保存':'勉強を始める'}</button></div></div>`;
+  h+=planCard();
+  const today=sum(l=>l.ts>=day0().getTime());
+  const ds=[];for(let i=6;i>=0;i--){const d=day0();d.setDate(d.getDate()-i);const a=d.getTime(),b=a+864e5;ds.push({l:'日月火水木金土'[d.getDay()],s:sum(x=>x.ts>=a&&x.ts<b)})}
+  const mx=Math.max(...ds.map(x=>x.s),3600);
+  h+=`<div class="card"><h2>今日 ${fmt(today)}</h2><div class="days">${ds.map(x=>`<div><b style="height:${x.s/mx*100}%"></b>${x.l}</div>`).join('')}</div></div>`;
+  h+=`<div class="card"><h2>あとから記録する</h2><div class="row" style="margin-top:0"><select id="msel">${opts()}</select><input id="mmin" type="number" min="1" placeholder="分" class="fix" style="width:80px"></div>
+  ${pick('m')}<div class="row"><button class="btn" data-a="addlog">記録を追加</button></div></div>`;
+  const rec=[...S.logs].sort((a,b)=>b.ts-a.ts).slice(0,8);
+  h+=`<div class="card"><h2>最近の記録</h2>${rec.length?rec.map(l=>{const s=sub(l.sid);const d=new Date(l.ts);
+    return `<div class="item"><span class="dot" style="background:${s?s.color:'#999'}"></span><div class="grow">${s?esc(s.name):'（削除済み）'}<div class="sub">${d.getMonth()+1}/${d.getDate()} ${fmt(l.sec)}${l.mat?' ／ '+esc(l.mat)+(l.unit?'・'+esc(l.unit):''):''}</div>${l.memo?`<div class="sub" style="color:var(--ink)">${esc(l.memo)}</div>`:''}</div><button class="ghost" data-a="dellog" data-v="${l.id}" aria-label="削除">削除</button></div>`}).join(''):'<div class="empty">まだ記録がありません</div>'}</div>`;
+  return h;
+}
+
+function subView(){
+  const ws=weekStart();
+  let h=`<div class="card"><h2>今週の進み具合</h2>`;
+  if(!S.subjects.length)h+='<div class="empty">科目を追加してください</div>';
+  S.subjects.forEach(s=>{
+    const done=sum(l=>l.sid===s.id&&l.ts>=ws),goal=s.goal*3600,p=goal?Math.min(100,done/goal*100):0,all=sum(l=>l.sid===s.id),tp=s.total?Math.min(100,all/(s.total*3600)*100):0;
+    h+=`<div class="item" style="display:block"><div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${s.color}"></span><div class="grow"><b>${esc(s.name)}</b></div><button class="ghost" data-a="delsub" data-v="${s.id}">削除</button></div>
+    <div class="prog"><i style="width:${p}%;background:${s.color}"></i></div>
+    <div class="sub" style="display:flex;justify-content:space-between;align-items:center"><span>${fmt(done)} / 週${s.goal}時間（${Math.round(p)}%）</span>
+    <span>目標 <input type="number" min="0" step="0.5" value="${s.goal}" data-goal="${s.id}" style="width:70px;padding:4px 6px"> 時間</span></div>
+    <div class="sub" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span>累計 ${fmt(all)} / ${s.total||0}時間（${Math.round(tp)}%）</span><span>総目標 <input type="number" min="0" step="10" value="${s.total||0}" data-total="${s.id}" style="width:70px;padding:4px 6px"> 時間</span></div>
+    <div class="prog"><i style="width:${tp}%;background:${s.color};opacity:.55"></i></div></div>`;
+  });
+  h+=`</div><div class="card"><h2>科目を追加</h2><input id="sname" placeholder="科目名（例：英語）">
+  <div class="row"><input id="sgoal" type="number" min="0" step="0.5" placeholder="週の目標（時間）"></div>
+  <div class="row"><input id="stot" type="number" min="0" placeholder="総目標（時間）"></div>
+  <div class="row"><button class="btn" 科目を追加</button></div></div><div class="card"><h2>バックアップ</h2><div class="sub" style="margin-bottom:8px">記録を文字で書き出して、別の端末やブラウザに移せます。</div><textarea id="bk" rows="4" style="width:100%;font:inherit;font-size:12px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px" placeholder="書き出した内容がここに表示されます。読み込むときはここに貼り付けます。"></textarea><div class="row"><button class="btn" data-a="bkout">書き出す</button><button class="btn" data-a="bkin" style="background:var(--bar);color:var(--ink)">読み込む（置き換え）</button></div><div class="sub" id="bkmsg" style="margin-top:6px"></div></div>`;
+  return h;
+}
+
+const EXTRA={'鑑定理論':['マスター問題集','基準'],'演習':['アクセル問題集']};
+const MOCKS=['2025第1回','2025第2回','2026第1回','2026第2回'];
+const YEARS=(()=>{const a=[];for(let y=8;y>=1;y--)a.push(y===1?'令和元年（平成３１年）':'令和'+y+'年');for(let y=30;y>=1;y--)a.push('平成'+(y===1?'元':y)+'年');return a})();
+const matsOf=n=>['基本テキスト','総まとめテキスト',...(EXTRA[n]||[]),'基礎答練','直前答練','模試過去問','過去問'];
+const unitKind=(n,m)=>m==='模試過去問'?'mock':(m==='過去問'&&n!=='会計学')?'year':'text';
+const prevUnits=(n,m)=>[...new Set(S.logs.filter(l=>l.mat===m&&l.unit&&(sub(l.sid)||{}).name===n).sort((a,b)=>b.ts-a.ts).map(l=>l.unit))].slice(0,20);
+function unitCtl(p,n,m){const k=unitKind(n,m);
+  if(k==='mock')return `<select id="${p}unit" aria-label="年度・回">${MOCKS.map(x=>`<option>${x}</option>`).join('')}</select>`;
+  if(k==='year')return `<select id="${p}unit" aria-label="年度">${YEARS.map(x=>`<option>${x}</option>`).join('')}</select>`;
+  return `<input id="${p}unit" list="${p}ul" placeholder="単元（例：第3章）" autocomplete="off"><datalist id="${p}ul">${prevUnits(n,m).map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`}
+function pick(p){const s=sub(S.sel)||S.subjects[0],ms=matsOf(s.name);
+  return `<div class="row"><select id="${p}mat" aria-label="教材">${ms.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="row" id="${p}unitwrap">${unitCtl(p,s.name,ms[0])}</div><div class="row"><input id="${p}memo" placeholder="メモ（例：1ページから8ページ）" autocomplete="off"></div>`}
+function fillPick(p){const s=sub($(p+'sel').value);if(!s)return;const ms=matsOf(s.name),cur=$(p+'mat').value;
+  $(p+'mat').innerHTML=ms.map(x=>`<option${x===cur?' selected':''}>${x}</option>`).join('');fillUnit(p)}
+function fillUnit(p){const s=sub($(p+'sel').value);if(!s)return;$(p+'unitwrap').innerHTML=unitCtl(p,s.name,$(p+'mat').value)}
+
+function colOpts(c){return COLS.map(([n,h])=>`<option value="${h}"${h===c?' selected':''}>${n}</option>`).join('')}
+
+function statView(){
+  const per=S.per||'week';
+  let h=`<nav>${[['week','週ごと'],['month','月ごと'],['subj','科目ごと']].map(([k,n])=>`<button data-a="per" data-v="${k}" class="${per===k?'on':''}">${n}</button>`).join('')}</nav>`;
+  if(!S.subjects.length)return h+'<div class="card"><div class="empty">科目を追加すると集計が表示されます</div></div>';
+  if(per==='subj'){
+    const ws=weekStart(),n=new Date(),ms=new Date(n.getFullYear(),n.getMonth(),1).getTime();
+    const rows=S.subjects.map(s=>({s,w:sum(l=>l.sid===s.id&&l.ts>=ws),m:sum(l=>l.sid===s.id&&l.ts>=ms),t:sum(l=>l.sid===s.id)}));
+    const mx=Math.max(...rows.map(r=>r.t),1),tot=rows.reduce((a,r)=>a+r.t,0);
+    return h+`<div class="card"><h2>科目ごとの学習時間（累計 ${fmt(tot)}）</h2>`+rows.map(r=>`<div class="item" style="display:block"><div style="display:flex;align-items:center;gap:10px"><span class="dot" style="background:${r.s.color}"></span><b class="grow">${esc(r.s.name)}</b><b>${fmt(r.t)}</b></div><div class="prog"><i style="width:${r.t/mx*100}%;background:${r.s.color}"></i></div><div class="sub">今週 ${fmt(r.w)} ／ 今月 ${fmt(r.m)}</div></div>`).join('')+'</div>';
+  }
+  const bk=[],now=new Date();
+  if(per==='week'){const w0=weekStart();for(let i=7;i>=0;i--){const a=new Date(w0);a.setDate(a.getDate()-7*i);const b=new Date(a);b.setDate(b.getDate()+7);bk.push({l:`${a.getMonth()+1}/${a.getDate()}〜`,a:a.getTime(),b:b.getTime()})}}
+  else for(let i=5;i>=0;i--){const a=new Date(now.getFullYear(),now.getMonth()-i,1),b=new Date(now.getFullYear(),now.getMonth()-i+1,1);bk.push({l:`${a.getFullYear()}年${a.getMonth()+1}月`,a:a.getTime(),b:b.getTime()})}
+  bk.forEach(x=>{x.p=S.subjects.map(s=>({s,v:sum(l=>l.sid===s.id&&l.ts>=x.a&&l.ts<x.b)}));x.t=x.p.reduce((a,q)=>a+q.v,0)});
+  const mx=Math.max(...bk.map(x=>x.t),1);
+  h+=`<div class="card"><h2>${per==='week'?'週ごと（月曜はじまり）':'月ごと'}の学習時間</h2>`+[...bk].reverse().map(x=>`<div class="item" style="display:block"><div style="display:flex;justify-content:space-between"><span>${x.l}</span><b>${fmt(x.t)}</b></div><div class="stk">${x.p.filter(q=>q.v).map(q=>`<i style="width:${q.v/mx*100}%;background:${q.s.color}"></i>`).join('')}</div></div>`).join('')+'</div>';
+  h+=`<div class="card sub">${S.subjects.map(s=>`<span style="margin-right:12px;white-space:nowrap"><span class="dot" style="display:inline-block;background:${s.color}"></span> ${esc(s.name)}</span>`).join('')}</div>`;
+  return h;
+}
+
+const hcache={};
+function holidays(y){
+  if(hcache[y])return hcache[y];
+  const set=new Set(),k=(m,d)=>m*100+d;
+  const nth=(m,n)=>{const f=new Date(y,m-1,1).getDay();return 1+((1-f+7)%7)+7*(n-1)};
+  const base=[k(1,1),k(2,11),k(2,23),k(4,29),k(5,3),k(5,4),k(5,5),k(8,11),k(11,3),k(11,23),k(1,nth(1,2)),k(7,nth(7,3)),k(9,nth(9,3)),k(10,nth(10,2)),
+    k(3,Math.floor(20.8431+0.242194*(y-1980))-Math.floor((y-1980)/4)),k(9,Math.floor(23.2488+0.242194*(y-1980))-Math.floor((y-1980)/4))];
+  base.forEach(x=>set.add(x));
+  base.forEach(x=>{const d=new Date(y,Math.floor(x/100)-1,x%100);if(d.getDay()===0){do{d.setDate(d.getDate()+1)}while(set.has(k(d.getMonth()+1,d.getDate())));set.add(k(d.getMonth()+1,d.getDate()))}});
+  for(let i=1;i<364;i++){const d=new Date(y,0,1+i),p=new Date(y,0,i),n=new Date(y,0,2+i);
+    if(d.getDay()!==0&&!set.has(k(d.getMonth()+1,d.getDate()))&&set.has(k(p.getMonth()+1,p.getDate()))&&set.has(k(n.getMonth()+1,n.getDate())))set.add(k(d.getMonth()+1,d.getDate()))}
+  return hcache[y]=set;
+}
+const isOff=d=>{const g=d.getDay();return g===0||g===6||holidays(d.getFullYear()).has((d.getMonth()+1)*100+d.getDate())};
+const plan=()=>({name:'鑑定士試験',total:1500,wd:4,we:8,base:0,...(S.plan||{})});
+function planCard(){
+  const p=plan(),t0=day0().getTime(),nf=x=>Math.round(x*10)/10;
+  const e=S.exams.filter(x=>x.name.includes(p.name)&&new Date(x.date+'T00:00')>=t0).sort((a,b)=>a.date<b.date?-1:1)[0];
+  if(!e)return `<div class="card"><h2>${esc(p.name)}までの目安</h2><div class="empty">「試験」タブに「${esc(p.name)}」を追加すると表示されます</div></div>`;
+  const days=Math.round((new Date(e.date+'T00:00')-t0)/864e5);
+  const done=p.base+sum(()=>true)/3600,rem=Math.max(0,p.total-done),pc=Math.min(100,done/p.total*100);
+  const wk=isOff;
+  const hol=wk(new Date()),tg=hol?p.we:p.wd,td=sum(l=>l.ts>=t0)/3600;
+  let cap=0;
+  if(days>=1){cap=Math.max(0,tg-td);for(let i=1;i<days;i++){const d=new Date(t0);d.setDate(d.getDate()+i);cap+=wk(d)?p.we:p.wd}}
+  const avg=days>0?rem/days:0;
+  let v;
+  if(rem<=0)v='目標時間に到達しています。';
+  else if(days<1)v=`試験当日です。目標まであと${nf(rem)}時間でした。`;
+  else if(cap>=rem)v=`この計画どおり進めば達成できます（余裕 約${Math.round(cap-rem)}時間）`;
+  else v=`計画どおりだと約${Math.round(rem-cap)}時間足りません。1日あたり約${nf((rem-cap)/days)}時間のペースアップが必要です。`;
+  return `<div class="card"><h2>${esc(e.name)}まで ${days>0?'あと'+days+'日':'今日'}</h2>
+  <div class="sub">今日の目安 ${tg}時間（${hol?'休日':'平日'}）</div>
+  <div class="prog"><i style="width:${tg?Math.min(100,td/tg*100):0}%;background:var(--acc)"></i></div>
+  <div class="sub">今日 ${fmt(td*3600)} / ${tg}時間</div>
+  <div style="height:12px"></div>
+  <div class="sub">累計 ${nf(done)} / ${p.total}時間（${Math.round(pc)}%）</div>
+  <div class="prog"><i style="width:${pc}%;background:var(--acc)"></i></div>
+  <div class="sub">残り ${nf(rem)}時間 ／ 均等に割ると1日 ${nf(avg)}時間</div>
+  <p style="margin:10px 0 0;font-weight:700">${v}</p></div>`;
+}
+
+function examView(){
+  const t=day0().getTime();
+  const list=[...S.exams].sort((a,b)=>a.date<b.date?-1:1);
+  let h=`<div class="card"><h2>試験日まで</h2>`;
+  if(!list.length)h+='<div class="empty">試験を追加するとカウントダウンが表示されます</div>';
+  list.forEach(e=>{
+    const d=Math.round((new Date(e.date+'T00:00')-t)/864e5);
+    h+=`<div class="item"><div class="grow"><b>${esc(e.name)}</b><div class="sub">${e.date.replace(/-/g,'/')}</div></div>
+    <div class="big" style="${d<0?'color:var(--sub)':''}">${d>0?d:d===0?'今日':'終了'}<span class="sub">${d>0?' 日':''}</span></div>
+    <button class="ghost" data-a="delexam" data-v="${e.id}">削除</button></div>`;
+  });
+  h+=`</div><div class="card"><h2>目安学習時間の設定</h2>
+  <div class="sub">対象の試験名（名前の一部でOK）</div><input id="pname" value="${esc(plan().name)}">
+  <div class="row"><div><div class="sub">合計目標（時間）</div><input id="ptot" type="number" min="1" value="${plan().total}"></div><div><div class="sub">これまでの勉強（時間）</div><input id="pbase" type="number" min="0" step="0.5" value="${plan().base}"></div></div>
+  <div class="row"><div><div class="sub">平日の目標（時間/日）</div><input id="pwd" type="number" min="0" step="0.5" value="${plan().wd}"></div><div><div class="sub">休日の目標（時間/日）</div><input id="pwe" type="number" min="0" step="0.5" value="${plan().we}"></div></div>
+  <div class="row"><button class="btn" data-a="saveplan">設定を保存</button></div>
+  <div class="sub" style="margin-top:8px">休日は土日と祝日です。「これまでの勉強」は、このアプリを使う前に勉強した時間です。</div></div><div class="card"><h2>試験を追加</h2><input id="ename" placeholder="試験名（例：期末テスト）">
+  <div class="row"><input id="edate" type="date"></div>
+  <div class="row"><button class="btn" data-a="addexam">試験を追加</button></div></div>`;
+  return h;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const a=b.dataset.a,v=b.dataset.v;
+  if(a==='tab')tab=v;else if(a==='per')S.per=v;
+  else if(a==='bkout'){const t=$('bk');t.value=JSON.stringify(S);t.select();let m='書き出しました。全選択してコピーしてください。';try{navigator.clipboard.writeText(t.value);m='書き出して、コピーしました。'}catch(e){}$('bkmsg').textContent=m;return}
+  else if(a==='bkin'){let o;try{o=JSON.parse($('bk').value)}catch(e){}
+    if(!o||!Array.isArray(o.subjects)||!Array.isArray(o.logs)){$('bkmsg').textContent='読み込めませんでした。書き出した内容をそのまま貼り付けてください。';return}
+    const sel=S.sel;S=o;S.sel=sel;S.seeded=true;S.exams=S.exams||[];fixSubs()}
+  else if(a==='saveplan'){S.plan={name:$('pname').value.trim()||'鑑定士試験',total:parseFloat($('ptot').value)||1500,base:parseFloat($('pbase').value)||0,wd:parseFloat($('pwd').value)||0,we:parseFloat($('pwe').value)||0}}
+  else if(a==='start'){S.sel=$('tsel').value;S.timer={sid:S.sel,start:Date.now(),mat:$('tmat').value,unit:($('tunit').value||'').trim(),memo:($('tmemo').value||'').trim()}}
+  else if(a==='stop'){const sec=(Date.now()-S.timer.start)/1000;if(sec>=1)S.logs.push({id:uid(),sid:S.timer.sid,ts:Date.now(),sec:Math.round(sec),mat:S.timer.mat||'',unit:S.timer.unit||'',memo:$('tmemo')?$('tmemo').value.trim():(S.timer.memo||'')});S.timer=null}
+  else if(a==='addlog'){const m=parseFloat($('mmin').value);if(!(m>0))return;S.sel=$('msel').value;S.logs.push({id:uid(),sid:S.sel,ts:Date.now(),sec:Math.round(m*60),mat:$('mmat').value,unit:($('munit').value||'').trim(),memo:($('mmemo').value||'').trim()})}
+  else if(a==='dellog')S.logs=S.logs.filter(l=>l.id!==v);
+  else if(a==='addsub'){const n=$('sname').value.trim();if(!n)return;S.subjects.push({id:uid(),name:n,goal:parseFloat($('sgoal').value)||0,color:COLS[S.subjects.length%COLS.length][1],total:parseFloat($('stot').value)||0})}
+  else if(a==='delsub'){if(!confirm('この科目を削除しますか？（記録は集計から外れます）'))return;S.subjects=S.subjects.filter(s=>s.id!==v);S.logs=S.logs.filter(l=>l.sid!==v)}
+  else if(a==='addexam'){const n=$('ename').value.trim(),d=$('edate').value;if(!n||!d)return;S.exams.push({id:uid(),name:n,date:d})}
+  else if(a==='delexam')S.exams=S.exams.filter(x=>x.id!==v);
+  save();render();
+});
+document.addEventListener('change',e=>{
+  const eid=e.target.id;
+  if(eid==='tmemo'){if(S.timer){S.timer.memo=e.target.value.trim();save()}return}
+  if(eid==='tsel'||eid==='msel'){fillPick(eid[0]);return}
+  if(eid==='tmat'||eid==='mmat'){fillUnit(eid[0]);return}
+  const tt=e.target.dataset&&e.target.dataset.total;
+  if(tt){const s=sub(tt);if(s){s.total=Math.max(0,parseFloat(e.target.value)||0);save();render()}return}
+  const c=e.target.dataset&&e.target.dataset.col;
+  if(c){const s=sub(c);if(s){s.color=e.target.value;save();render()}return}
+  const g=e.target.dataset&&e.target.dataset.goal;
+  if(g){const s=sub(g);if(s){s.goal=Math.max(0,parseFloat(e.target.value)||0);save();render()}}
+});
+setInterval(()=>{if(S.timer&&$('tm'))$('tm').textContent=clock((Date.now()-S.timer.start)/1000)},1000);
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
